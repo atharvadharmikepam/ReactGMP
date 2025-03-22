@@ -8,7 +8,8 @@ const GenreSelect = ({ genres, selectedGenre, onSelect }) => {
         <button
           key={genre}
           className={genre === selectedGenre ? "selected" : ""}
-          onClick={() => onSelect(genre)}
+          aria-pressed={genre === selectedGenre}
+          onClick={() => genre !== selectedGenre && onSelect(genre)}
         >
           {genre}
         </button>

@@ -4,9 +4,11 @@ import "./SearchForm.css";
 const SearchForm = ({ initialQuery = "", onSearch }) => {
   const [query, setQuery] = useState(initialQuery);
   const handleSearch = () => {
-    onSearch(query);
+    if (query.trim()) {
+      onSearch(query);
+    }
   };
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       handleSearch();
     }
@@ -17,7 +19,7 @@ const SearchForm = ({ initialQuery = "", onSearch }) => {
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        onKeyPress={handleKeyPress}
+        onKeyDown={handleKeyDown}
         placeholder="Search..."
       />
       <button onClick={handleSearch}>Search</button>
