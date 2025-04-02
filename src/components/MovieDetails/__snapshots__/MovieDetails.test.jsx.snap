@@ -1,0 +1,109 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`MovieDetails Component matches snapshot with complete movie data 1`] = `
+<DocumentFragment>
+  <div
+    class="movie-details"
+  >
+    <img
+      alt="Inception"
+      class="movie-poster"
+      src="https://example.com/poster.jpg"
+    />
+    <div
+      class="movie-info"
+    >
+      <div
+        class="movie-header"
+      >
+        <h1
+          class="movie-title"
+        >
+          Inception
+        </h1>
+        <span
+          class="movie-rating"
+        >
+          8.8
+        </span>
+      </div>
+      <p
+        class="movie-genres"
+      >
+        Action • Sci-Fi • Thriller
+      </p>
+      <div
+        class="movie-meta"
+      >
+        <span
+          class="movie-year"
+        >
+          2010
+        </span>
+        <span
+          class="movie-duration"
+        >
+          2h 28m
+        </span>
+      </div>
+      <p
+        class="movie-description"
+      >
+        A thief who steals corporate secrets through the use of dream-sharing technology.
+      </p>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`MovieDetails Component matches snapshot with minimal movie data 1`] = `
+<DocumentFragment>
+  <div
+    class="movie-details"
+  >
+    <img
+      alt="Minimal Movie"
+      class="movie-poster"
+      src="https://example.com/poster.jpg"
+    />
+    <div
+      class="movie-info"
+    >
+      <div
+        class="movie-header"
+      >
+        <h1
+          class="movie-title"
+        >
+          Minimal Movie
+        </h1>
+        <span
+          class="movie-rating"
+        />
+      </div>
+      <p
+        class="movie-genres"
+      >
+        Drama
+      </p>
+      <div
+        class="movie-meta"
+      >
+        <span
+          class="movie-year"
+        >
+          2023
+        </span>
+        <span
+          class="movie-duration"
+        />
+      </div>
+      <p
+        class="movie-description"
+      >
+        Simple description
+      </p>
+    </div>
+  </div>
+</DocumentFragment>
+`;
