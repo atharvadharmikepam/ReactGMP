@@ -20,7 +20,7 @@ const SearchForm = ({ initialQuery = "", onSearch }) => {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Search..."
+        placeholder="What do you want to watch?"
       />
       <button onClick={handleSearch}>Search</button>
     </div>

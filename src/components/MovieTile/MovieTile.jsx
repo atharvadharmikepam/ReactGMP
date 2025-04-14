@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./MovieTile.css";
 
-const MovieTile = ({ movie, onClick }) => {
+const MovieTile = ({ movie, onClick, onEdit, onDelete }) => {
   const { imageUrl, title, year, genres } = movie;
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
@@ -41,8 +41,24 @@ const MovieTile = ({ movie, onClick }) => {
         </button>
         {showMenu && (
           <div className="context-menu">
-            <button className="menu-item">Edit</button>
-            <button className="menu-item">Delete</button>
+            <button
+              className="menu-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(movie);
+              }}
+            >
+              Edit
+            </button>
+            <button
+              className="menu-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(movie);
+              }}
+            >
+              Delete
+            </button>
           </div>
         )}
       </div>
