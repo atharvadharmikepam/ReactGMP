@@ -1,0 +1,28 @@
+.homepage {
+  background-color: #232323;
+  color: #ffffff;
+  font-family: "Montserrat", sans-serif;
+  min-height: 100vh;
+}
+
+.controls-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #232323;
+  padding: 20px 40px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.movie-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px 40px;
+}
+
+.movie-tile {
+  width: calc(20% - 20px);
+  box-sizing: border-box;
+}
