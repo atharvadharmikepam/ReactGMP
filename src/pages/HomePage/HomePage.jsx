@@ -1,34 +1,40 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
+import { useSearchParams, useNavigate, useParams } from "react-router-dom";
 import Header from "../../components/Header/Header";
+import MovieDetails from "../../components/MovieDetails/MovieDetails";
 import MovieTile from "../../components/MovieTile/MovieTile";
 import GenreSelect from "../../components/GenreSelect/GenreSelect";
 import SortControl from "../../components/SortControl/SortControl";
 import Dialog from "../../components/Dialog/Dialog";
 import MovieForm from "../../components/MovieForm/MovieForm";
 import "./HomePage.css";
-import { fetchMovies } from "../../api/moviesApi";
+import { fetchMovies, fetchMovieById } from "../../api/moviesApi";
 
 const genresList = ["All", "Documentary", "Comedy", "Horror", "Crime"];
 
 const HomePage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [movies, setMovies] = useState([]);
+  const [selectedMovie, setSelectedMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedGenre, setSelectedGenre] = useState("All");
-  const [sortOption, setSortOption] = useState("release_date");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editMovie, setEditMovie] = useState(null);
   const [movieToDelete, setMovieToDelete] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchBy, setSearchBy] = useState("title");
+  const navigate = useNavigate();
+  const { movieId } = useParams();
+
+  // Read values from URL with defaults
+  const searchQuery = searchParams.get("query") || "";
+  const searchBy = searchParams.get("searchBy") || "title";
+  const selectedGenre = searchParams.get("genre") || "All";
+  const sortOption = searchParams.get("sortBy") || "release_date";
 
   const loadMovies = async () => {
     try {
       setLoading(true);
-  
       const genreFilter = selectedGenre !== "All" ? selectedGenre : "";
-  
       const moviesData = await fetchMovies({
         search: searchQuery,
         searchBy,
@@ -38,7 +44,6 @@ const HomePage = () => {
         offset: 0,
         limit: 20,
       });
-  
       setMovies(moviesData);
       setLoading(false);
     } catch (err) {
@@ -48,9 +53,36 @@ const HomePage = () => {
   };
 
   useEffect(() => {
+    const loadMovieDetails = async () => {
+      if (movieId) {
+        console.log("Loading movie details for ID:", movieId);
+        try {
+          const movie = await fetchMovieById(movieId);
+          console.log("Loaded movie details:", movie);
+          setSelectedMovie(movie);
+        } catch (err) {
+          console.error("Failed to load movie details:", err);
+        }
+      } else {
+        setSelectedMovie(null);
+      }
+    };
+
+    loadMovieDetails();
+  }, [movieId]);
+
+  // Add console log to check selected movie state
+  useEffect(() => {
+    console.log("Selected movie changed:", selectedMovie);
+  }, [selectedMovie]);
+
+  useEffect(() => {
     loadMovies();
   }, [searchQuery, searchBy, selectedGenre, sortOption]);
 
+  const handleMovieClick = (movie) => {
+    navigate(`/movie/${movie.id}${window.location.search}`);
+  };
   const handleAddMovie = () => {
     setIsDialogOpen(true);
   };
@@ -78,22 +110,34 @@ const HomePage = () => {
   };
 
   const handleSearch = (query, searchField) => {
-    setSearchQuery(query);
-    setSearchBy(searchField);
+    setSearchParams((params) => {
+      params.set("query", query);
+      params.set("searchBy", searchField);
+      return params;
+    });
   };
 
   const handleSortChange = (newSortOption) => {
-    setSortOption(newSortOption);
+    setSearchParams((params) => {
+      params.set("sortBy", newSortOption);
+      return params;
+    });
   };
 
   const handleGenreSelect = (genre) => {
-    setSelectedGenre(genre);
+    setSearchParams((params) => {
+      params.set("genre", genre);
+      return params;
+    });
   };
 
   return (
     <div className="homepage">
-      <Header onAddMovie={handleAddMovie} onSearch={handleSearch} />
-
+      {selectedMovie ? (
+        <MovieDetails movie={selectedMovie} />
+      ) : (
+        <Header onAddMovie={handleAddMovie} onSearch={handleSearch} />
+      )}
       <div className="controls-bar">
         <GenreSelect
           genres={genresList}
@@ -116,7 +160,7 @@ const HomePage = () => {
             <MovieTile
               key={movie.id}
               movie={movie}
-              onClick={() => {}}
+              onClick={() => handleMovieClick(movie)}
               onEdit={handleEditMovie}
               onDelete={handleDeleteMovie}
             />

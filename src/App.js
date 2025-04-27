@@ -1,11 +1,15 @@
 import React from "react";
+import { Routes, Route } from 'react-router-dom';
 import HomePage from "./pages/HomePage/HomePage";
 import "./App.css";
 
 const App = () => {
   return (
     <div>
-      <HomePage />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/movie/:movieId" element={<HomePage />} />
+      </Routes>
     </div>
   );
 };

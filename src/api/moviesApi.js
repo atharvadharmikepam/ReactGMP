@@ -35,3 +35,16 @@ export const fetchMovies = async ({
     throw error;
   }
 };
+
+export const fetchMovieById = async (movieId) => {
+    try {
+      const response = await fetch(`${API_URL}/${movieId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch movie details');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching movie:', error);
+      throw error;
+    }
+  };

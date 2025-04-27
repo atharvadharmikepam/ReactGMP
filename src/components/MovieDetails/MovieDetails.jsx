@@ -2,22 +2,24 @@ import React from "react";
 import "./MovieDetails.css";
 
 const MovieDetails = ({ movie }) => {
-  const { imageUrl, title, year, rating, duration, description, genres } = movie;
+  console.log('MovieDetails received movie:', movie); // Add debug log
+
+  const { poster_path, title, release_date, vote_average, runtime, overview, genres } = movie;
 
   return (
     <div className="movie-details">
-      <img src={imageUrl} alt={title} className="movie-poster" />
+      <img src={poster_path} alt={title} className="movie-poster" />
       <div className="movie-info">
         <div className="movie-header">
           <h1 className="movie-title">{title}</h1>
-          <span className="movie-rating">{rating}</span>
+          <span className="movie-rating">{vote_average}</span>
         </div>
         <p className="movie-genres">{genres.join(" • ")}</p>
         <div className="movie-meta">
-          <span className="movie-year">{year}</span>
-          <span className="movie-duration">{duration}</span>
+          <span className="movie-year">{release_date}</span>
+          <span className="movie-duration">{runtime}</span>
         </div>
-        <p className="movie-description">{description}</p>
+        <p className="movie-description">{overview}</p>
       </div>
     </div>
   );
