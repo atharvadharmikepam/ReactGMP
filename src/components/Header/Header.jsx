@@ -1,8 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import SearchForm from "../SearchForm/SearchForm";
 import "./Header.css";
 
-const Header = ({ onSearch, onAddMovie }) => {
+const Header = ({ onSearch }) => {
+  const [searchBy, setSearchBy] = useState("title");
+
+  const handleSearch = (query) => {
+    onSearch(query, searchBy);
+  };
+
   return (
     <header className="header">
       <div className="header-overlay">
@@ -11,13 +17,23 @@ const Header = ({ onSearch, onAddMovie }) => {
             <span className="logo-red">netflix</span>
             <span className="logo-light">roulette</span>
           </span>
-          <button className="add-movie-btn" onClick={onAddMovie}>
+          <button className="add-movie-btn" onClick={() => onSearch("", "add")}>
             + ADD MOVIE
           </button>
         </div>
         <div className="header-content">
           <h1 className="title">FIND YOUR MOVIE</h1>
-          <SearchForm onSearch={onSearch} />
+          <div className="search-controls">
+            <select
+              className="search-select"
+              value={searchBy}
+              onChange={(e) => setSearchBy(e.target.value)}
+            >
+              <option value="title">Title</option>
+              <option value="genres">Genre</option>
+            </select>
+            <SearchForm onSearch={handleSearch} />
+          </div>
         </div>
       </div>
     </header>

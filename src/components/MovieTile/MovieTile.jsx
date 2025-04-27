@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "./MovieTile.css";
 
 const MovieTile = ({ movie, onClick, onEdit, onDelete }) => {
-  const { imageUrl, title, year, genres } = movie;
+  const { poster_path, title, release_date, genres } = movie;
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
 
@@ -17,6 +17,8 @@ const MovieTile = ({ movie, onClick, onEdit, onDelete }) => {
     }
   };
 
+  const year = new Date(release_date).getFullYear();
+
   useEffect(() => {
     if (showMenu) {
       document.addEventListener("click", handleClickOutside);
@@ -28,7 +30,7 @@ const MovieTile = ({ movie, onClick, onEdit, onDelete }) => {
 
   return (
     <div className="movie-tile" onClick={onClick}>
-      <img src={imageUrl} alt={title} className="movie-image" />
+      <img src={poster_path} alt={title} className="movie-image" />
       <div className="movie-info">
         <h3 className="movie-title">{title}</h3>
         <span className="movie-year">{year}</span>

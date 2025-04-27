@@ -77,3 +77,27 @@
   margin-bottom: 20px;
   letter-spacing: 2px;
 }
+
+.search-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.search-select {
+  background: #424242;
+  color: #ffffff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  height: 44px;
+}
+
+.search-select:focus {
+  outline: none;
+  border: 1px solid #f65261;
+}

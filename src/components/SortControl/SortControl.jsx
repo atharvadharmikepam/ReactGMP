@@ -10,7 +10,7 @@ const SortControl = ({ selectedSort, onSortChange }) => {
         value={selectedSort} 
         onChange={(e) => onSortChange(e.target.value)}
       >
-        <option value="releaseDate">Release Date</option>
+        <option value="release_date">Release Date</option>
         <option value="title">Title</option>
       </select>
     </div>
