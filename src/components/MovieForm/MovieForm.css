@@ -1,0 +1,167 @@
+/* MovieForm.css */
+.movie-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: white;
+  font-family: "Montserrat", sans-serif;
+  padding: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  text-transform: uppercase;
+  font-size: 12px;
+  color: #f65261;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background-color: rgba(50, 50, 50, 0.948);
+  border: none;
+  border-radius: 4px;
+  padding: 16px;
+  color: white;
+  font-size: 14px;
+  width: 100%;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(246, 82, 97, 0.3);
+}
+
+.form-group select[multiple] {
+  min-height: 100px;
+}
+
+.form-group select[multiple] option {
+  padding: 8px;
+}
+
+.form-group select[multiple] option:checked {
+  background-color: #f65261;
+  color: white;
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.error {
+  color: #f65261;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.form-actions button[type="reset"] {
+  background: transparent;
+  border: 1px solid #f65261;
+  color: #f65261;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.form-actions button[type="submit"] {
+  background: #f65261;
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.form-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Hover effects */
+.form-actions button[type="reset"]:hover:not(:disabled) {
+  background: rgba(246, 82, 97, 0.1);
+}
+
+.form-actions button[type="submit"]:hover:not(:disabled) {
+  background: #e54957;
+}
+
+/* For better mobile responsiveness */
+@media (max-width: 768px) {
+  .movie-form {
+    padding: 15px;
+    gap: 15px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}
+
+/* Custom scrollbar for textarea and multiple select */
+.form-group textarea::-webkit-scrollbar,
+.form-group select[multiple]::-webkit-scrollbar {
+  width: 8px;
+}
+
+.form-group textarea::-webkit-scrollbar-track,
+.form-group select[multiple]::-webkit-scrollbar-track {
+  background: #333;
+}
+
+.form-group textarea::-webkit-scrollbar-thumb,
+.form-group select[multiple]::-webkit-scrollbar-thumb {
+  background: #f65261;
+  border-radius: 4px;
+}
+
+/* For Firefox */
+.form-group textarea,
+.form-group select[multiple] {
+  scrollbar-width: thin;
+  scrollbar-color: #f65261 #333;
+}
+
+/* Placeholder styling */
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Date input specific styling */
+.form-group input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+/* Number input specific styling */
+.form-group input[type="number"]::-webkit-inner-spin-button,
+.form-group input[type="number"]::-webkit-outer-spin-button {
+  opacity: 1;
+  background: #f65261;
+  border-radius: 2px;
+}

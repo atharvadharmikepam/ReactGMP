@@ -1,25 +1,20 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { Routes, Route } from 'react-router-dom';
+import HomePage from "./pages/HomePage/HomePage";
+import AddMovieForm from "./components/AddMovieForm/AddMovieForm";
+import EditMovieForm from "./components/EditMovieForm/EditMovieForm";
 
-function App() {
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Routes>
+      <Route path="/" element={<HomePage />}>
+        <Route path="new" element={<AddMovieForm />} />
+      </Route>
+      <Route path="/movie/:movieId" element={<HomePage />}>
+        <Route path="edit" element={<EditMovieForm />} />
+      </Route>
+    </Routes>
   );
-}
+};
 
 export default App;

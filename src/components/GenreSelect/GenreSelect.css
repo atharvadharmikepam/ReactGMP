@@ -1,0 +1,31 @@
+.genre-select {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  background-color: #232323;
+  padding: 20px 0;
+}
+
+.genre-select button {
+  padding: 8px 20px;
+  font-size: 14px;
+  border: none;
+  background-color: transparent;
+  color: #ffffff;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  font-family: 'Montserrat', sans-serif;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.genre-select button:hover {
+  color: #f65261;
+}
+
+.genre-select button.selected {
+  color: #f65261;
+  font-weight: bold;
+  border-bottom: 3px solid #f65261;
+}
