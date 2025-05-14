@@ -89,8 +89,32 @@
   width: 100%;
   text-align: left;
   cursor: pointer;
+  text-decoration: none; /* Remove link underline */
+  font-family: inherit; /* Match the font family */
+  font-size: inherit; /* Match the font size */
+  margin: 0; /* Remove any default margins */
+  appearance: none; /* Remove default link styling */
+  -webkit-appearance: none;
+  line-height: normal; /* Match button line height */
 }
 
+/* Hover state for both button and link */
 .menu-item:hover {
   background: #555;
+}
+
+/* Active state for both button and link */
+.menu-item:active {
+  background: #666;
+}
+
+/* Focus state for both button and link */
+.menu-item:focus {
+  outline: none;
+  background: #555;
+}
+
+/* Optional: Add a divider between menu items */
+.menu-item + .menu-item {
+  border-top: 1px solid #444;
 }

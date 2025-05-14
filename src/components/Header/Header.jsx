@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import SearchForm from "../SearchForm/SearchForm";
 import "./Header.css";
 
-const Header = ({ onSearch }) => {
+const Header = ({ onSearch, children }) => {
   const [searchBy, setSearchBy] = useState("title");
 
   const handleSearch = (query) => {
@@ -17,9 +17,7 @@ const Header = ({ onSearch }) => {
             <span className="logo-red">netflix</span>
             <span className="logo-light">roulette</span>
           </span>
-          <button className="add-movie-btn" onClick={() => onSearch("", "add")}>
-            + ADD MOVIE
-          </button>
+          {children}
         </div>
         <div className="header-content">
           <h1 className="title">FIND YOUR MOVIE</h1>

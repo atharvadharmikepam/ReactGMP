@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./MovieTile.css";
+import { Link } from "react-router-dom";
 
 const MovieTile = ({ movie, onClick, onEdit, onDelete }) => {
   const { poster_path, title, release_date, genres } = movie;
@@ -43,15 +44,13 @@ const MovieTile = ({ movie, onClick, onEdit, onDelete }) => {
         </button>
         {showMenu && (
           <div className="context-menu">
-            <button
+            <Link
+              to={`/movie/${movie.id}/edit${window.location.search}`}
+              onClick={(e) => e.stopPropagation()}
               className="menu-item"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(movie);
-              }}
             >
               Edit
-            </button>
+            </Link>
             <button
               className="menu-item"
               onClick={(e) => {

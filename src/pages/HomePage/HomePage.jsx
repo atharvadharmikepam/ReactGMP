@@ -1,6 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
-import { useSearchParams, useNavigate, useParams } from "react-router-dom";
+import {
+  useSearchParams,
+  useNavigate,
+  useParams,
+  Outlet,
+  Link,
+} from "react-router-dom";
 import Header from "../../components/Header/Header";
 import MovieDetails from "../../components/MovieDetails/MovieDetails";
 import MovieTile from "../../components/MovieTile/MovieTile";
@@ -83,14 +89,6 @@ const HomePage = () => {
   const handleMovieClick = (movie) => {
     navigate(`/movie/${movie.id}${window.location.search}`);
   };
-  const handleAddMovie = () => {
-    setIsDialogOpen(true);
-  };
-
-  const handleEditMovie = (movie) => {
-    setEditMovie(movie);
-    setIsDialogOpen(true);
-  };
 
   const handleDeleteMovie = (movie) => {
     setMovieToDelete(movie);
@@ -134,9 +132,22 @@ const HomePage = () => {
   return (
     <div className="homepage">
       {selectedMovie ? (
+        <>
         <MovieDetails movie={selectedMovie} />
+        <Outlet />
+        </>
       ) : (
-        <Header onAddMovie={handleAddMovie} onSearch={handleSearch} />
+        <>
+          <Header onSearch={handleSearch}>
+            <Link
+              to={`/new${window.location.search}`}
+              className="add-movie-btn"
+            >
+              + ADD MOVIE
+            </Link>
+          </Header>
+          <Outlet />
+        </>
       )}
       <div className="controls-bar">
         <GenreSelect
@@ -161,7 +172,6 @@ const HomePage = () => {
               key={movie.id}
               movie={movie}
               onClick={() => handleMovieClick(movie)}
-              onEdit={handleEditMovie}
               onDelete={handleDeleteMovie}
             />
           ))}

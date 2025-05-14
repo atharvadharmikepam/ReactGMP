@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom/extend-expect';
 import MovieForm from './MovieForm';
 
@@ -7,11 +8,10 @@ describe('MovieForm Component', () => {
   const mockOnSubmit = jest.fn();
   const initialData = {
     title: 'Initial Title',
-    releaseDate: '2022-01-01',
-    url: 'http://example.com',
-    genre: 'Action',
-    rating: '8.5',
-    runtime: '120',
+    release_date: '2022-01-01',
+    poster_path: 'http://example.com/poster.jpg',
+    genres: ['Documentary', 'Comedy'],
+    runtime: 120,
     overview: 'Initial overview text'
   };
 
@@ -22,99 +22,127 @@ describe('MovieForm Component', () => {
   test('renders all form fields with empty initial values', () => {
     render(<MovieForm onSubmit={mockOnSubmit} />);
     
-    expect(screen.getByLabelText('Title')).toHaveValue('');
-    expect(screen.getByLabelText('Release Date')).toHaveValue('');
-    expect(screen.getByLabelText('Movie URL')).toHaveValue('');
-    expect(screen.getByLabelText('Rating')).toHaveValue('');
-    expect(screen.getByLabelText('Genre')).toHaveValue('');
-    expect(screen.getByLabelText('Runtime')).toHaveValue('');
-    expect(screen.getByLabelText('Overview')).toHaveValue('');
+    expect(screen.getByLabelText(/title/i)).toHaveValue('');
+    expect(screen.getByLabelText(/release date/i)).toHaveValue('');
+    expect(screen.getByLabelText(/movie url/i)).toHaveValue('');
+    expect(screen.getByLabelText(/runtime/i)).toHaveValue(null);
+    expect(screen.getByLabelText(/overview/i)).toHaveValue('');
   });
 
   test('populates form fields when initialData is provided', () => {
     render(<MovieForm initialData={initialData} onSubmit={mockOnSubmit} />);
     
-    expect(screen.getByLabelText('Title')).toHaveValue(initialData.title);
-    expect(screen.getByLabelText('Release Date')).toHaveValue(initialData.releaseDate);
-    expect(screen.getByLabelText('Movie URL')).toHaveValue(initialData.url);
-    expect(screen.getByLabelText('Rating')).toHaveValue(initialData.rating);
-    expect(screen.getByLabelText('Genre')).toHaveValue(initialData.genre);
-    expect(screen.getByLabelText('Runtime')).toHaveValue(initialData.runtime);
-    expect(screen.getByLabelText('Overview')).toHaveValue(initialData.overview);
+    expect(screen.getByLabelText(/title/i)).toHaveValue(initialData.title);
+    expect(screen.getByLabelText(/release date/i)).toHaveValue(initialData.release_date);
+    expect(screen.getByLabelText(/movie url/i)).toHaveValue(initialData.poster_path);
+    expect(screen.getByLabelText(/runtime/i)).toHaveValue(initialData.runtime);
+    expect(screen.getByLabelText(/overview/i)).toHaveValue(initialData.overview);
   });
 
-  test('updates form state when input values change', () => {
+  test('shows validation errors when submitting empty form', async () => {
     render(<MovieForm onSubmit={mockOnSubmit} />);
     
-    const titleInput = screen.getByLabelText('Title');
-    fireEvent.change(titleInput, { target: { value: 'New Title' } });
-    expect(titleInput).toHaveValue('New Title');
-
-    const dateInput = screen.getByLabelText('Release Date');
-    fireEvent.change(dateInput, { target: { value: '2023-01-01' } });
-    expect(dateInput).toHaveValue('2023-01-01');
-
-    const overviewInput = screen.getByLabelText('Overview');
-    fireEvent.change(overviewInput, { target: { value: 'New overview' } });
-    expect(overviewInput).toHaveValue('New overview');
-  });
-
-  test('calls onSubmit with form data when submitted', () => {
-    render(<MovieForm onSubmit={mockOnSubmit} />);
-    
-    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Test Movie' } });
-    fireEvent.change(screen.getByLabelText('Genre'), { target: { value: 'Comedy' } });
     fireEvent.submit(screen.getByRole('form'));
 
-    expect(mockOnSubmit).toHaveBeenCalledTimes(1);
-    expect(mockOnSubmit).toHaveBeenCalledWith({
-      title: 'Test Movie',
-      releaseDate: '',
-      url: '',
-      genre: 'Comedy',
-      rating: '',
-      runtime: '',
-      overview: ''
+    expect(await screen.findByText('Title is required')).toBeInTheDocument();
+    expect(await screen.findByText('Release date is required')).toBeInTheDocument();
+    expect(await screen.findByText('Poster URL is required')).toBeInTheDocument();
+    expect(await screen.findByText('Genre is required')).toBeInTheDocument();
+    expect(await screen.findByText('Runtime is required')).toBeInTheDocument();
+    expect(await screen.findByText('Overview is required')).toBeInTheDocument();
+
+    expect(mockOnSubmit).not.toHaveBeenCalled();
+  });
+
+  test('validates URL format for poster path', async () => {
+    render(<MovieForm onSubmit={mockOnSubmit} />);
+    
+    const urlInput = screen.getByLabelText(/movie url/i);
+    userEvent.type(urlInput, 'invalid-url');
+    fireEvent.blur(urlInput);
+
+    await waitFor(() => {
+      expect(screen.getByText('Must be a valid URL')).toBeInTheDocument();
     });
   });
 
-  test('resets form when reset button is clicked', () => {
+  test('validates positive number for runtime', async () => {
+    render(<MovieForm onSubmit={mockOnSubmit} />);
+    
+    const runtimeInput = screen.getByLabelText(/runtime/i);
+    userEvent.type(runtimeInput, '-120');
+    fireEvent.blur(runtimeInput);
+
+    await waitFor(() => {
+      expect(screen.getByText('Must be positive')).toBeInTheDocument();
+    });
+  });
+
+  test('successfully submits form with valid data', async () => {
+    render(<MovieForm onSubmit={mockOnSubmit} />);
+    
+    userEvent.type(screen.getByLabelText(/title/i), 'Test Movie');
+    userEvent.type(screen.getByLabelText(/release date/i), '2023-01-01');
+    userEvent.type(screen.getByLabelText(/movie url/i), 'http://example.com/poster.jpg');
+    userEvent.type(screen.getByLabelText(/runtime/i), '120');
+    userEvent.type(screen.getByLabelText(/overview/i), 'Test overview');
+
+    // Handle multiple select
+    const genreSelect = screen.getByLabelText(/genre/i);
+    userEvent.selectOptions(genreSelect, ['Documentary']);
+
+    fireEvent.submit(screen.getByRole('form'));
+
+    await waitFor(() => {
+      expect(mockOnSubmit).toHaveBeenCalledWith({
+        title: 'Test Movie',
+        release_date: '2023-01-01',
+        poster_path: 'http://example.com/poster.jpg',
+        genres: ['Documentary'],
+        runtime: 120,
+        overview: 'Test overview'
+      });
+    });
+  });
+
+  test('resets form when reset button is clicked', async () => {
     render(<MovieForm initialData={initialData} onSubmit={mockOnSubmit} />);
     
-    fireEvent.click(screen.getByRole('button', { name: /Reset/i }));
-    
-    expect(screen.getByLabelText('Title')).toHaveValue('');
-    expect(screen.getByLabelText('Release Date')).toHaveValue('');
-    expect(screen.getByLabelText('Movie URL')).toHaveValue('');
-    expect(screen.getByLabelText('Rating')).toHaveValue('');
-    expect(screen.getByLabelText('Genre')).toHaveValue('');
-    expect(screen.getByLabelText('Runtime')).toHaveValue('');
-    expect(screen.getByLabelText('Overview')).toHaveValue('');
+    fireEvent.click(screen.getByRole('button', { name: /reset/i }));
+
+    await waitFor(() => expect(screen.getByLabelText(/title/i)).toHaveValue(''));
+    await waitFor(() => expect(screen.getByLabelText(/release date/i)).toHaveValue(''));
+    await waitFor(() => expect(screen.getByLabelText(/movie url/i)).toHaveValue(''));
+    await waitFor(() => expect(screen.getByLabelText(/runtime/i)).toHaveValue(null));
+    await waitFor(() => expect(screen.getByLabelText(/overview/i)).toHaveValue(''));
   });
 
-  test('has all required form controls', () => {
+  test('handles multiple genre selection', async () => {
     render(<MovieForm onSubmit={mockOnSubmit} />);
     
-    expect(screen.getByLabelText('Title')).toBeInTheDocument();
-    expect(screen.getByLabelText('Release Date')).toBeInTheDocument();
-    expect(screen.getByLabelText('Movie URL')).toBeInTheDocument();
-    expect(screen.getByLabelText('Rating')).toBeInTheDocument();
-    expect(screen.getByLabelText('Genre')).toBeInTheDocument();
-    expect(screen.getByLabelText('Runtime')).toBeInTheDocument();
-    expect(screen.getByLabelText('Overview')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Reset/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Submit/i })).toBeInTheDocument();
+    const genreSelect = screen.getByLabelText(/genre/i);
+    userEvent.selectOptions(genreSelect, ['Documentary', 'Comedy']);
+
+    await waitFor(() => {
+      expect(genreSelect.selectedOptions).toHaveLength(2);
+    });
   });
 
-  test('genre select has all options', () => {
-    render(<MovieForm onSubmit={mockOnSubmit} />);
-    
-    const options = screen.getAllByRole('option');
-    expect(options).toHaveLength(6);
-    expect(screen.getByText('Action')).toBeInTheDocument();
-    expect(screen.getByText('Adventure')).toBeInTheDocument();
-    expect(screen.getByText('Comedy')).toBeInTheDocument();
-    expect(screen.getByText('Drama')).toBeInTheDocument();
-    expect(screen.getByText('Horror')).toBeInTheDocument();
+  test('disables submit button while submitting', async () => {
+    render(<MovieForm onSubmit={async () => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }} />);
+
+    // Fill out the form
+    userEvent.type(screen.getByLabelText(/title/i), 'Test Movie');
+    userEvent.type(screen.getByLabelText(/release date/i), '2023-01-01');
+    userEvent.type(screen.getByLabelText(/movie url/i), 'http://example.com/poster.jpg');
+    userEvent.type(screen.getByLabelText(/runtime/i), '120');
+    userEvent.type(screen.getByLabelText(/overview/i), 'Test overview');
+    userEvent.selectOptions(screen.getByLabelText(/genre/i), ['Documentary']);
+
+    fireEvent.submit(screen.getByRole('form'));
+
+    expect(screen.getByRole('button', { name: /submit/i })).toBeDisabled();
   });
 });

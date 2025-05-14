@@ -1,83 +1,123 @@
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom/extend-expect';
-import Header from './Header';
+import React from "react";
+import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import "@testing-library/jest-dom/extend-expect";
+import Header from "./Header";
 
-describe('Header Component', () => {
+describe("Header Component", () => {
   const mockOnSearch = jest.fn();
+  const mockChildren = <button>Test Child</button>;
 
   beforeEach(() => {
     mockOnSearch.mockClear();
   });
 
-  test('renders the Netflix Roulette logo correctly', () => {
+  test("renders the Netflix Roulette logo correctly", () => {
     render(<Header onSearch={mockOnSearch} />);
-    
-    expect(screen.getByText('netflix')).toBeInTheDocument();
-    expect(screen.getByText('roulette')).toBeInTheDocument();
+
+    const netflixText = screen.getByText("netflix");
+    const rouletteText = screen.getByText("roulette");
+
+    expect(netflixText).toBeInTheDocument();
+    expect(netflixText).toHaveClass("logo-red");
+    expect(rouletteText).toBeInTheDocument();
+    expect(rouletteText).toHaveClass("logo-light");
   });
 
-  test('renders the "ADD MOVIE" button', () => {
-    render(<Header onSearch={mockOnSearch} />);
-    
-    const addButton = screen.getByRole('button', { name: /\+ ADD MOVIE/i });
-    expect(addButton).toBeInTheDocument();
-  });
+  test("renders children components correctly", () => {
+    render(<Header onSearch={mockOnSearch}>{mockChildren}</Header>);
 
-  test('calls onSearch with empty query and "add" when add movie button is clicked', () => {
-    render(<Header onSearch={mockOnSearch} />);
-    
-    fireEvent.click(screen.getByRole('button', { name: /\+ ADD MOVIE/i }));
-    expect(mockOnSearch).toHaveBeenCalledWith('', 'add');
+    expect(screen.getByText("Test Child")).toBeInTheDocument();
   });
 
   test('renders the main title "FIND YOUR MOVIE"', () => {
     render(<Header onSearch={mockOnSearch} />);
-    
-    expect(screen.getByText('FIND YOUR MOVIE')).toBeInTheDocument();
+
+    const title = screen.getByText("FIND YOUR MOVIE");
+    expect(title).toBeInTheDocument();
+    expect(title.tagName).toBe("H1");
+    expect(title).toHaveClass("title");
   });
 
-  test('renders the search select with correct options', () => {
+  test("renders search controls with correct initial state", () => {
     render(<Header onSearch={mockOnSearch} />);
-    
-    const select = screen.getByRole('combobox');
-    expect(select).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'Title' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'Genre' })).toBeInTheDocument();
+
+    const select = screen.getByRole("combobox");
+    expect(select).toHaveValue("title");
+    expect(select).toHaveClass("search-select");
+
+    const options = screen.getAllByRole("option");
+    expect(options).toHaveLength(2);
+    expect(options[0]).toHaveValue("title");
+    expect(options[1]).toHaveValue("genres");
   });
 
-  test('updates searchBy state when select value changes', () => {
+  test("updates searchBy state when select value changes", async () => {
     render(<Header onSearch={mockOnSearch} />);
-    
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'genres' } });
-    expect(select.value).toBe('genres');
+
+    const select = screen.getByRole("combobox");
+    await userEvent.selectOptions(select, "genres");
+
+    expect(select).toHaveValue("genres");
   });
 
-  test('calls onSearch with correct parameters when search is performed', () => {
+  test("calls onSearch with correct parameters when search is triggered", async () => {
     render(<Header onSearch={mockOnSearch} />);
-    
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'genres' } });
 
-    const searchQuery = 'test query';
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: searchQuery } });
-    fireEvent.submit(screen.getByTestId('search-form'));
+    const select = screen.getByRole("combobox");
+    await userEvent.selectOptions(select, "genres");
 
-    expect(mockOnSearch).toHaveBeenCalledWith(searchQuery, 'genres');
+    const searchQuery = "test query";
+    const searchInput = screen.getByRole("textbox");
+    await userEvent.type(searchInput, searchQuery);
+
+    fireEvent.submit(screen.getByRole("form"));
+
+    expect(mockOnSearch).toHaveBeenCalledWith(searchQuery, "genres");
   });
 
-  test('default search type is "title"', () => {
+  test("maintains search type when performing multiple searches", async () => {
     render(<Header onSearch={mockOnSearch} />);
-    
-    const select = screen.getByRole('combobox');
-    expect(select.value).toBe('title');
+
+    const select = screen.getByRole("combobox");
+    await userEvent.selectOptions(select, "genres");
+
+    await userEvent.type(screen.getByRole("textbox"), "first search");
+    fireEvent.submit(screen.getByRole("form"));
+    expect(mockOnSearch).toHaveBeenCalledWith("first search", "genres");
+
+    await userEvent.clear(screen.getByRole("textbox"));
+    await userEvent.type(screen.getByRole("textbox"), "second search");
+    fireEvent.submit(screen.getByRole("form"));
+    expect(mockOnSearch).toHaveBeenCalledWith("second search", "genres");
   });
 
-  test('header has correct CSS classes', () => {    
-    expect(screen.getByTestId('header')).toBeInTheDocument();
-    expect(screen.getByTestId('header-overlay')).toBeInTheDocument();
-    expect(screen.getByTestId('header-top-bar')).toBeInTheDocument();
-    expect(screen.getByTestId('header-content')).toBeInTheDocument();
+  test("header structure and styling", () => {
+    expect(screen.getByTestId("header")).toBeInTheDocument();
+    expect(screen.getByTestId("header-overlay")).toBeInTheDocument();
+    expect(screen.getByTestId("header-top-bar")).toBeInTheDocument();
+    expect(screen.getByTestId("header-content")).toBeInTheDocument();
+    expect(screen.getByTestId("search-controls")).toBeInTheDocument();
+  });
+
+  test("search controls layout", () => {
+    const searchControls = screen.getByTestId("search-controls");
+    expect(searchControls).toContainElement(screen.getByRole("combobox"));
+    expect(
+      screen.getAllByRole("combobox").length +
+        screen.getAllByRole("form").length
+    ).toBe(2);
+  });
+
+  test("handles empty children prop", () => {
+    render(<Header onSearch={mockOnSearch} />);
+
+    const topBar = screen.getByTestId("header-top-bar");
+    expect(topBar).toContainElement(screen.getByText("netflix"));
+  });
+
+  test("search type select has correct styling", () => {
+    const select = screen.getByRole("combobox");
+    expect(select).toHaveClass("search-select");
   });
 });

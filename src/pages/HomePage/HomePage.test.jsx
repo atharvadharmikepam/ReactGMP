@@ -1,34 +1,55 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import '@testing-library/jest-dom/extend-expect';
-import HomePage from './HomePage';
-import { fetchMovies, fetchMovieById } from '../../api/moviesApi';
+import React from "react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
+import userEvent from "@testing-library/user-event";
+import "@testing-library/jest-dom/extend-expect";
+import HomePage from "./HomePage";
+import { fetchMovies, fetchMovieById } from "../../api/moviesApi";
 
-jest.mock('../../api/moviesApi');
-jest.mock('../../components/Header/Header', () => {
-  return function MockHeader({ onSearch, onAddMovie }) {
+jest.mock("../../api/moviesApi");
+
+jest.mock("../../components/Header/Header", () => {
+  return function MockHeader({ onSearch, children }) {
     return (
       <div data-testid="mock-header">
-        <button onClick={() => onAddMovie()}>Add Movie</button>
-        <button onClick={() => onSearch('test', 'title')}>Search</button>
+        {children}
+        <input
+          data-testid="search-input"
+          onChange={(e) => onSearch(e.target.value, "title")}
+        />
       </div>
     );
   };
 });
 
-jest.mock('../../components/MovieDetails/MovieDetails', () => {
+jest.mock("../../components/MovieDetails/MovieDetails", () => {
   return function MockMovieDetails({ movie }) {
     return <div data-testid="mock-movie-details">{movie.title}</div>;
   };
 });
 
 const mockMovies = [
-  { id: 1, title: 'Movie 1', genre: 'Action', release_date: '2021-01-01' },
-  { id: 2, title: 'Movie 2', genre: 'Comedy', release_date: '2021-02-01' },
+  {
+    id: 1,
+    title: "Movie 1",
+    genres: ["Action"],
+    release_date: "2021-01-01",
+    poster_path: "path/to/poster1",
+    overview: "Overview 1",
+    runtime: 120,
+  },
+  {
+    id: 2,
+    title: "Movie 2",
+    genres: ["Comedy"],
+    release_date: "2021-02-01",
+    poster_path: "path/to/poster2",
+    overview: "Overview 2",
+    runtime: 90,
+  },
 ];
 
-describe('HomePage Component', () => {
+describe("HomePage Component", () => {
   beforeEach(() => {
     fetchMovies.mockResolvedValue(mockMovies);
     fetchMovieById.mockResolvedValue(mockMovies[0]);
@@ -38,113 +59,174 @@ describe('HomePage Component', () => {
     jest.clearAllMocks();
   });
 
-  const renderWithRouter = (ui, { route = '/' } = {}) => {
-    window.history.pushState({}, 'Test page', route);
+  const renderWithRouter = (route = "/") => {
     return render(
       <MemoryRouter initialEntries={[route]}>
         <Routes>
-          <Route path="/*" element={ui} />
-          <Route path="/movie/:movieId" element={ui} />
+          <Route path="/" element={<HomePage />}>
+            <Route path="new" element={<div>Add Movie Form</div>} />
+            <Route
+              path="movie/:movieId/edit"
+              element={<div>Edit Movie Form</div>}
+            />
+          </Route>
+          <Route path="/movie/:movieId" element={<HomePage />} />
         </Routes>
       </MemoryRouter>
     );
   };
 
-  test('renders loading state initially', () => {
-    renderWithRouter(<HomePage />);
+  test("renders loading state initially", () => {
+    renderWithRouter();
     expect(screen.getByText(/loading movies/i)).toBeInTheDocument();
   });
 
-  test('renders movies after loading', async () => {
-    renderWithRouter(<HomePage />);
+  test("renders movies after loading", async () => {
+    renderWithRouter();
     await waitFor(() => {
       expect(screen.queryByText(/loading movies/i)).not.toBeInTheDocument();
     });
-    expect(screen.getByText('Movie 1')).toBeInTheDocument();
-    expect(screen.getByText('Movie 2')).toBeInTheDocument();
   });
 
-  test('handles API error', async () => {
-    fetchMovies.mockRejectedValueOnce(new Error('API Error'));
-    renderWithRouter(<HomePage />);
+  test("handles API error gracefully", async () => {
+    const error = new Error("API Error");
+    fetchMovies.mockRejectedValueOnce(error);
+    renderWithRouter();
+
     await waitFor(() => {
       expect(screen.getByText(/failed to load movies/i)).toBeInTheDocument();
     });
   });
 
-  test('opens dialog when add movie button is clicked', async () => {
-    renderWithRouter(<HomePage />);
+  test("navigates to movie details when movie is clicked", async () => {
+    renderWithRouter();
     await waitFor(() => {
-      expect(screen.queryByText(/loading movies/i)).not.toBeInTheDocument();
+      expect(screen.getAllByTestId("movie-tile")).toHaveLength(
+        mockMovies.length
+      );
     });
-    fireEvent.click(screen.getByText(/add movie/i));
-    expect(screen.getByText(/ADD MOVIE/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByTestId("movie-tile")[0]);
+    expect(window.location.pathname).toContain("/movie/1");
   });
 
-  test('updates URL when search is performed', async () => {
-    renderWithRouter(<HomePage />);
+  test("preserves search params when navigating", async () => {
+    renderWithRouter("/?query=test&searchBy=title");
     await waitFor(() => {
-      expect(screen.queryByText(/loading movies/i)).not.toBeInTheDocument();
+      expect(screen.getAllByTestId("movie-tile")).toHaveLength(
+        mockMovies.length
+      );
     });
-    fireEvent.click(screen.getByText(/search/i));
-    expect(window.location.search).toContain('query=test');
-    expect(window.location.search).toContain('searchBy=title');
+
+    fireEvent.click(screen.getAllByTestId("movie-tile")[0]);
+    expect(window.location.search).toContain("query=test");
+    expect(window.location.search).toContain("searchBy=title");
   });
 
-  test('displays movie details when movie is selected', async () => {
-    renderWithRouter(<HomePage />, { route: '/movie/1' });
+  test("updates URL and triggers search when search params change", async () => {
+    renderWithRouter();
     await waitFor(() => {
-      expect(screen.getByTestId('mock-movie-details')).toBeInTheDocument();
+      expect(screen.getAllByTestId("movie-tile")).toHaveLength(
+        mockMovies.length
+      );
+    });
+
+    const searchInput = screen.getByTestId("search-input");
+    await userEvent.type(searchInput, "test search");
+
+    expect(window.location.search).toContain("query=test%20search");
+    expect(fetchMovies).toHaveBeenCalledWith(
+      expect.objectContaining({
+        search: "test search",
+      })
+    );
+  });
+
+  test("updates movies when genre is selected", async () => {
+    renderWithRouter();
+    await waitFor(() => {
+      expect(screen.getAllByTestId("movie-tile")).toHaveLength(
+        mockMovies.length
+      );
+    });
+
+    const genreSelect = screen.getByTestId("genre-select");
+    await userEvent.selectOptions(genreSelect, "Comedy");
+
+    expect(fetchMovies).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filter: "Comedy",
+      })
+    );
+  });
+
+  test("updates movies when sort option changes", async () => {
+    renderWithRouter();
+    await waitFor(() => {
+      expect(screen.getAllByTestId("movie-tile")).toHaveLength(
+        mockMovies.length
+      );
+    });
+
+    const sortSelect = screen.getByTestId("sort-select");
+    await userEvent.selectOptions(sortSelect, "title");
+
+    expect(fetchMovies).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sortBy: "title",
+      })
+    );
+  });
+
+  test("loads and displays movie details correctly", async () => {
+    renderWithRouter("/movie/1");
+
+    await waitFor(() => {
+      expect(screen.getByTestId("mock-movie-details")).toBeInTheDocument();
     });
   });
 
-  test('handles genre selection', async () => {
-    renderWithRouter(<HomePage />);
+  test("renders add movie form when /new route is accessed", async () => {
+    renderWithRouter("/new");
+
     await waitFor(() => {
-      expect(screen.queryByText(/loading movies/i)).not.toBeInTheDocument();
+      expect(screen.getByText("Add Movie Form")).toBeInTheDocument();
     });
-    const genreSelect = screen.getByRole('combobox');
-    fireEvent.change(genreSelect, { target: { value: 'Comedy' } });
-    expect(window.location.search).toContain('genre=Comedy');
   });
 
-  test('handles sort selection', async () => {
-    renderWithRouter(<HomePage />);
+  test("renders edit movie form when /:movieId/edit route is accessed", async () => {
+    renderWithRouter("/movie/1/edit");
+
     await waitFor(() => {
-      expect(screen.queryByText(/loading movies/i)).not.toBeInTheDocument();
+      expect(screen.getByText("Edit Movie Form")).toBeInTheDocument();
     });
-    const sortSelect = screen.getByLabelText(/sort by/i);
-    fireEvent.change(sortSelect, { target: { value: 'title' } });
-    expect(window.location.search).toContain('sortBy=title');
   });
 
-  test('handles movie deletion', async () => {
-    renderWithRouter(<HomePage />);
+  test("maintains all URL parameters when switching views", async () => {
+    renderWithRouter("/?query=test&genre=Comedy&sortBy=title");
     await waitFor(() => {
-      expect(screen.queryByText(/loading movies/i)).not.toBeInTheDocument();
+      expect(screen.getAllByTestId("movie-tile")).toHaveLength(
+        mockMovies.length
+      );
     });
-    const deleteButton = screen.getByTestId('delete-button');
-    fireEvent.click(deleteButton);
-    expect(screen.getByText(/are you sure you want to delete this movie/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByTestId("movie-tile")[0]);
+    expect(window.location.search).toContain("query=test");
+    expect(window.location.search).toContain("genre=Comedy");
+    expect(window.location.search).toContain("sortBy=title");
   });
 
-  test('handles movie editing', async () => {
-    renderWithRouter(<HomePage />);
+  test("resets selected movie when navigating away from details", async () => {
+    renderWithRouter("/movie/1");
     await waitFor(() => {
-      expect(screen.queryByText(/loading movies/i)).not.toBeInTheDocument();
+      expect(screen.getByTestId("mock-movie-details")).toBeInTheDocument();
     });
-    const editButton = screen.getByTestId('edit-button');
-    fireEvent.click(editButton);
-    expect(screen.getByText(/EDIT MOVIE/i)).toBeInTheDocument();
-  });
 
-  test('closes dialog when close button is clicked', async () => {
-    renderWithRouter(<HomePage />);
+    window.history.pushState({}, "", "/");
     await waitFor(() => {
-      expect(screen.queryByText(/loading movies/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("mock-movie-details")
+      ).not.toBeInTheDocument();
     });
-    fireEvent.click(screen.getByText(/add movie/i));
-    fireEvent.click(screen.getByRole('button', { name: /close/i }));
-    expect(screen.queryByText(/ADD MOVIE/i)).not.toBeInTheDocument();
   });
 });

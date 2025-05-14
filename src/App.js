@@ -1,16 +1,19 @@
 import React from "react";
 import { Routes, Route } from 'react-router-dom';
 import HomePage from "./pages/HomePage/HomePage";
-import "./App.css";
+import AddMovieForm from "./components/AddMovieForm/AddMovieForm";
+import EditMovieForm from "./components/EditMovieForm/EditMovieForm";
 
 const App = () => {
   return (
-    <div>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/movie/:movieId" element={<HomePage />} />
-      </Routes>
-    </div>
+    <Routes>
+      <Route path="/" element={<HomePage />}>
+        <Route path="new" element={<AddMovieForm />} />
+      </Route>
+      <Route path="/movie/:movieId" element={<HomePage />}>
+        <Route path="edit" element={<EditMovieForm />} />
+      </Route>
+    </Routes>
   );
 };
 

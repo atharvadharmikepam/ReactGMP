@@ -48,3 +48,35 @@ export const fetchMovieById = async (movieId) => {
       throw error;
     }
   };
+
+  export const addMovie = async (movieData) => {
+  const response = await fetch('your-api-endpoint/movies', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(movieData),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to add movie');
+  }
+
+  return response.json();
+};
+
+export const updateMovie = async (movieId, movieData) => {
+  const response = await fetch(`your-api-endpoint/movies/${movieId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(movieData),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to update movie');
+  }
+
+  return response.json();
+};

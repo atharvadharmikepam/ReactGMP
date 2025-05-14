@@ -1,42 +1,76 @@
 import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
 import MovieTile from './MovieTile';
+
+const renderWithRouter = (component) => {
+  return render(
+    <BrowserRouter>
+      {component}
+    </BrowserRouter>
+  );
+};
 
 describe('MovieTile Component', () => {
   const mockMovie = {
-    imageUrl: 'https://example.com/poster.jpg',
+    id: '123',
+    poster_path: 'https://example.com/poster.jpg',
     title: 'Test Movie',
-    year: '2023',
+    release_date: '2023-01-01',
     genres: ['Action', 'Adventure'],
   };
 
   const mockOnClick = jest.fn();
+  const mockOnEdit = jest.fn();
+  const mockOnDelete = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   test('renders movie information correctly', () => {
-    render(<MovieTile movie={mockMovie} onClick={mockOnClick} />);
+    renderWithRouter(
+      <MovieTile 
+        movie={mockMovie} 
+        onClick={mockOnClick}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+      />
+    );
     
-    expect(screen.getByAltText('Test Movie')).toHaveAttribute('src', mockMovie.imageUrl);
+    expect(screen.getByAltText('Test Movie')).toHaveAttribute('src', mockMovie.poster_path);
     expect(screen.getByText('Test Movie')).toBeInTheDocument();
     expect(screen.getByText('2023')).toBeInTheDocument();
     expect(screen.getByText('Action, Adventure')).toBeInTheDocument();
   });
 
-  test('calls onClick when clicked', () => {
-    render(<MovieTile movie={mockMovie} onClick={mockOnClick} />);
+  test('calls onClick when movie tile is clicked', () => {
+    renderWithRouter(
+      <MovieTile 
+        movie={mockMovie} 
+        onClick={mockOnClick}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+      />
+    );
     
-    fireEvent.click(screen.getByAltText('Test Movie'));
+    fireEvent.click(screen.getByTestId('movie-tile'));
     expect(mockOnClick).toHaveBeenCalledTimes(1);
   });
 
   test('toggles context menu when menu button is clicked', () => {
-    render(<MovieTile movie={mockMovie} onClick={mockOnClick} />);
+    renderWithRouter(
+      <MovieTile 
+        movie={mockMovie} 
+        onClick={mockOnClick}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+      />
+    );
     
-    const menuButton = screen.getByText('⋮');
+    const menuButton = screen.getByRole('button', { name: '⋮' });
     fireEvent.click(menuButton);
+    
     expect(screen.getByText('Edit')).toBeInTheDocument();
     expect(screen.getByText('Delete')).toBeInTheDocument();
     
@@ -46,40 +80,95 @@ describe('MovieTile Component', () => {
   });
 
   test('closes context menu when clicking outside', () => {
-    render(<MovieTile movie={mockMovie} onClick={mockOnClick} />);
+    renderWithRouter(
+      <MovieTile 
+        movie={mockMovie} 
+        onClick={mockOnClick}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+      />
+    );
     
-    const menuButton = screen.getByText('⋮');
+    const menuButton = screen.getByRole('button', { name: '⋮' });
     fireEvent.click(menuButton);
     expect(screen.getByText('Edit')).toBeInTheDocument();
     
-    fireEvent.click(document);
+    fireEvent.click(document.body);
     expect(screen.queryByText('Edit')).not.toBeInTheDocument();
   });
 
-  test('does not close context menu when clicking inside it', () => {
-    render(<MovieTile movie={mockMovie} onClick={mockOnClick} />);
+  test('calls onDelete when delete button is clicked', () => {
+    renderWithRouter(
+      <MovieTile 
+        movie={mockMovie} 
+        onClick={mockOnClick}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+      />
+    );
     
-    const menuButton = screen.getByText('⋮');
+    const menuButton = screen.getByRole('button', { name: '⋮' });
     fireEvent.click(menuButton);
     
-    const editButton = screen.getByText('Edit');
-    fireEvent.click(editButton);
-    expect(screen.getByText('Edit')).toBeInTheDocument();
-  });
-
-  test('stops event propagation when menu button is clicked', () => {
-    render(<MovieTile movie={mockMovie} onClick={mockOnClick} />);
+    const deleteButton = screen.getByText('Delete');
+    fireEvent.click(deleteButton);
     
-    const menuButton = screen.getByText('⋮');
-    fireEvent.click(menuButton);
-    
+    expect(mockOnDelete).toHaveBeenCalledWith(mockMovie);
     expect(mockOnClick).not.toHaveBeenCalled();
   });
 
-  test('handles empty genres array', () => {
-    const movieWithNoGenres = {...mockMovie, genres: []};
-    render(<MovieTile movie={movieWithNoGenres} onClick={mockOnClick} />);
+  test('renders correct edit link with search params', () => {
+    Object.defineProperty(window, 'location', {
+      value: { search: '?query=test' },
+      writable: true
+    });
+
+    renderWithRouter(
+      <MovieTile 
+        movie={mockMovie} 
+        onClick={mockOnClick}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+      />
+    );
     
-    expect(screen.queryByTestId('genres')).not.toBeInTheDocument();
+    const menuButton = screen.getByRole('button', { name: '⋮' });
+    fireEvent.click(menuButton);
+    
+    const editLink = screen.getByText('Edit');
+    expect(editLink).toHaveAttribute('href', `/movie/${mockMovie.id}/edit?query=test`);
+  });
+
+  test('handles movies with no genres gracefully', () => {
+    const movieWithNoGenres = { ...mockMovie, genres: [] };
+    renderWithRouter(
+      <MovieTile 
+        movie={movieWithNoGenres} 
+        onClick={mockOnClick}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+      />
+    );
+    
+    expect(screen.getByText('')).toBeInTheDocument();
+  });
+
+  test('prevents event bubbling when clicking menu items', () => {
+    renderWithRouter(
+      <MovieTile 
+        movie={mockMovie} 
+        onClick={mockOnClick}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+      />
+    );
+    
+    const menuButton = screen.getByRole('button', { name: '⋮' });
+    fireEvent.click(menuButton);
+    
+    const deleteButton = screen.getByText('Delete');
+    fireEvent.click(deleteButton);
+    
+    expect(mockOnClick).not.toHaveBeenCalled();
   });
 });
