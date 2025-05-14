@@ -2,7 +2,6 @@ import React from "react";
 import "./MovieDetails.css";
 
 const MovieDetails = ({ movie }) => {
-  console.log('MovieDetails received movie:', movie); // Add debug log
 
   const { poster_path, title, release_date, vote_average, runtime, overview, genres } = movie;
 
